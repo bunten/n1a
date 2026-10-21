@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ニューロンとニューラルネットワークを見てみよう</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"Yu Gothic UI",Meiryo,sans-serif;background:#f2f8ff;color:#173b62}
+header{background:linear-gradient(110deg,#124b8b,#2479b7);color:white;padding:20px 24px}
+h1{font-size:clamp(22px,3vw,34px);margin:0}header p{margin:8px 0 0}
+main{max-width:1400px;margin:auto;padding:16px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+.card{background:#fff;border:1px solid #c5def5;border-radius:14px;padding:15px;box-shadow:0 3px 10px #214c7010}
+svg{width:100%;height:auto;display:block}.controls h2{font-size:18px;margin:0 0 12px}
+label{display:block;font-size:14px;font-weight:bold;margin:15px 0 6px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+input[type=range]{width:100%;accent-color:#2588e8}input[type=number]{width:75px;padding:7px;border:1px solid #b9d8f5;border-radius:7px;color:#174a80}
+select{padding:8px;border:1px solid #b9d8f5;border-radius:7px;width:100%}
+button{padding:11px 14px;border:0;border-radius:9px;background:#2388ed;color:#fff;font-weight:bold;font-size:15px;cursor:pointer;width:100%;margin-top:10px}
+button.secondary{background:#e6f1fc;color:#1e568a;border:1px solid #c7def5}
+.hint{font-size:12px;line-height:1.6;color:#5d7893}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.cards h2{font-size:18px;margin:0 0 8px}.cards p{line-height:1.7;margin:6px 0;font-size:14px}
+.kicker{font-size:12px;color:#62809b}.result{background:#edf8ff;border-radius:9px;padding:10px;margin-top:12px;font-size:14px;line-height:1.7}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:7px 0}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+#status{font-size:13px;color:#37658e;line-height:1.6}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.controls{order:-1}}
+</style>
+</head>
+<body>
+<header><h1>ニューロンとニューラルネットワークを見てみよう</h1><p>入力から出力まで、AIの計算の流れを図形で体験しよう！</p></header>
+<main>
+<div class="layout">
+<section class="card">
+<div class="row"><h2>ニューラルネットワークの図</h2><span class="kicker">入力層 → 隠れ層 → 出力層</span></div>
+<div class="legend"><span><i class="dot" style="background:#2687e8"></i>入力</span><span><i class="dot" style="background:#8054cf"></i>隠れ層1</span><span><i class="dot" style="background:#d64f98"></i>隠れ層2</span><span><i class="dot" style="background:#1caa69"></i>出力</span><span>線の太さ・明るさ＝信号の強さのイメージ</span></div>
+<svg id="network" viewBox="0 0 900 440" role="img" aria-label="入力から隠れ層を通って出力に進むニューラルネットワーク"></svg>
+<div class="result" id="result">「動かす」を押すと、入力値がネットワークを通り、出力が計算されます。</div>
+</section>
+<aside class="card controls">
+<h2>入力値を変えてみよう</h2>
+<div class="row"><label for="x1">X1（国語）</label><input id="v1" type="number" min="0" max="1" step=".1" value=".8"></div><input id="x1" type="range" min="0" max="1" step=".1" value=".8">
+<div class="row"><label for="x2">X2（数学）</label><input id="v2" type="number" min="0" max="1" step=".1" value=".5"></div><input id="x2" type="range" min="0" max="1" step=".1" value=".5">
+<div class="row"><label for="x3">X3（英語）</label><input id="v3" type="number" min="0" max="1" step=".1" value=".3"></div><input id="x3" type="range" min="0" max="1" step=".1" value=".3">
+<label for="hidden">隠れ層のニューロン数</label><select id="hidden"><option>3</option><option selected>4</option><option>5</option></select>
+<label for="speed">アニメーション速度</label><input id="speed" type="range" min="1" max="5" value="3">
+<button id="run">▶ 動かす・計算する</button><button id="reset" class="secondary">↻ リセット</button>
+<p class="hint">入力値は0〜1の学習用の数値です。入力値を変えて、出力がどう変化するか観察しましょう。</p>
+<p id="status">準備完了です。入力値を変更して「動かす」を押してください。</p>
+</aside>
+</div>
+<div class="cards">
+<article class="card"><h2>① ニューロンのしくみ</h2><p>ニューロンは入力された数値に「重み」をかけて合計し、活性化関数を通して出力します。</p><p><b>出力 = 活性化関数（入力×重みの合計＋バイアス）</b></p><p class="hint">この教材では、説明を簡単にするためシグモイド関数を使っています。</p></article>
+<article class="card"><h2>② ネットワークのしくみ</h2><p>たくさんの人工ニューロンを線でつなぎ、層を重ねたものがニューラルネットワークです。前の層の出力が、次の層への入力になります。</p><p class="hint">線は「情報の受け渡し」、丸は「数値を計算する場所」を表します。</p></article>
+<article class="card"><h2>③ ここで学べること</h2><p>✓ 入力値を変えると出力が変わる</p><p>✓ 重みやバイアスが計算に関係する</p><p>✓ 隠れ層を増やすと計算の段階が増える</p><p class="hint">これは仕組みを学ぶための小さな模型です。本物のLLMは、はるかに多くのパラメータと計算を使います。</p></article>
+</div>
+</main>
+<script>
+const svg=document.getElementById('network');
+const ns='http://www.w3.org/2000/svg';
+const colors=['#2588e8','#8054cf','#d64f98','#1caa69'];
+let animTimer=null;
+function el(tag,attrs={},text=''){const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text)n.textContent=text;return n}
+function sigmoid(z){return 1/(1+Math.exp(-z))}
+function build(){
+ if(animTimer){clearInterval(animTimer);animTimer=null}
+ svg.innerHTML='';
+ const n=Number(document.getElementById('hidden').value);
+ const xs=[Number(x1.value),Number(x2.value),Number(x3.value)];
+ const layers=[3,n,n,2], xPos=[95,330,565,800], ys=layers.map(count=>Array.from({length:count},(_,i)=>220-(count-1)*65/2+i*65));
+ const vals=[xs,Array.from({length:n},(_,j)=>sigmoid(xs.reduce((s,x,i)=>s+x*(.35+((i+j)%3)*.22),0)-.35+j*.13)),Array.from({length:n},(_,j)=>0),[0,0]];
+ vals[2]=Array.from({length:n},(_,j)=>sigmoid(vals[1].reduce((s,x,i)=>s+x*(.25+((i*2+j)%4)*.17),0)-.4+j*.08));
+ vals[3]=[sigmoid(vals[2].reduce((s,x,i)=>s+x*(.3+i*.2),0)-.5),0];
+ vals[3][1]=1-vals[3][0];
+ // arrow marker
+ const defs=el('defs');const marker=el('marker',{id:'arrow',markerWidth:7,markerHeight:7,refX:5,refY:3,orient:'auto'});marker.appendChild(el('path',{d:'M0,0 L6,3 L0,6 Z',fill:'#6a9bc9'}));defs.appendChild(marker);svg.appendChild(defs);
+ // layer backgrounds
+ const names=['入力層','隠れ層 1','隠れ層 2','出力層'];
+ layers.forEach((count,l)=>{svg.appendChild(el('rect',{x:xPos[l]-58,y:36,width:116,height:365,rx:16,fill:colors[l],'fill-opacity':.07,stroke:colors[l],'stroke-opacity':.25}));svg.appendChild(el('text',{x:xPos[l],y:23,'text-anchor':'middle','font-size':17,'font-weight':'bold',fill:colors[l]},names[l]));});
+ // connections
+ for(let l=0;l<3;l++)for(let i=0;i<layers[l];i++)for(let j=0;j<layers[l+1];j++){
+   let strength=.3+((i*7+j*3+l*5)%7)/10;
+   const line=el('line',{x1:xPos[l]+23,y1:ys[l][i],x2:xPos[l+1]-25,y2:ys[l+1][j],stroke:colors[l+1], 'stroke-width':1+strength*1.5,'stroke-opacity':.18+strength*.55,'marker-end':'url(#arrow)','data-link':`${l}-${i}-${j}`});
+   svg.appendChild(line);
+ }
+ // nodes
+ layers.forEach((count,l)=>{for(let i=0;i<count;i++){
+   let val=vals[l][i]??.5, y=ys[l][i], x=xPos[l];
+   const g=el('g',{'data-node':`${l}-${i}`});
+   g.appendChild(el('circle',{cx:x,cy:y,r:l===0?21:25,fill:colors[l],'fill-opacity':.14,stroke:colors[l],'stroke-width':3}));
+   g.appendChild(el('circle',{cx:x,cy:y,r:16,fill:colors[l],'fill-opacity':.85}));
+   g.appendChild(el('text',{x,y:y+5,'text-anchor':'middle','font-size':13,'font-weight':'bold',fill:'#fff'},Number(val).toFixed(2)));
+   g.appendChild(el('title',{},`層${l+1} ニューロン${i+1} 出力 ${val.toFixed(3)}`));
+   svg.appendChild(g);
+ }});
+ ['X1','X2','X3'].forEach((t,i)=>svg.appendChild(el('text',{x:95,y:ys[0][i]+43,'text-anchor':'middle','font-size':13,fill:'#23557d'},`${t}=${xs[i].toFixed(1)}`)));
+ svg.appendChild(el('text',{x:800,y:ys[3][0]+43,'text-anchor':'middle','font-size':13,fill:'#126b45'},'合格の確率（模型）'));
+ svg.appendChild(el('text',{x:800,y:ys[3][1]+43,'text-anchor':'middle','font-size':13,fill:'#126b45'},'不合格の確率'));
+ document.getElementById('result').innerHTML=`計算結果の例：<b>合格の確率 ${vals[3][0].toFixed(2)}</b> ／ 不合格の確率 ${vals[3][1].toFixed(2)}。入力値から各層の出力を計算した模型です。`;
+ return {layers,xPos,ys};
+}
+function animate(){
+ const data=build();const speed=Number(document.getElementById('speed').value);
+ const nodes=[...svg.querySelectorAll('[data-node]')],lines=[...svg.querySelectorAll('[data-link]')];
+ let step=0;
+ document.getElementById('status').textContent='信号が入力層から隠れ層、出力層へ進んでいます…';
+ if(animTimer)clearInterval(animTimer);
+ nodes.forEach(n=>n.querySelectorAll('circle')[0].setAttribute('fill-opacity','.14'));
+ animTimer=setInterval(()=>{
+   if(step>3){clearInterval(animTimer);animTimer=null;document.getElementById('status').textContent='完了！入力値を変えて、もう一度試してみましょう。';return}
+   nodes.forEach(node=>{const l=Number(node.dataset.node.split('-')[0]);node.querySelectorAll('circle')[0].setAttribute('fill-opacity',l===step?'.85':'.14')});
+   lines.forEach(line=>{const l=Number(line.dataset.link.split('-')[0]);line.setAttribute('stroke-opacity',l===step?'.95':'.18')});
+   document.getElementById('status').textContent=['入力値を受け取っています。','隠れ層1で数値を計算しています。','隠れ層2で情報をさらに処理しています。','出力層で結果を表示しています。'][step]||'完了';
+   step++;
+ },650/speed);
+}
+['x1','x2','x3'].forEach((id,i)=>{document.getElementById(id).addEventListener('input',()=>{document.getElementById('v'+(i+1)).value=document.getElementById(id).value});document.getElementById('v'+(i+1)).addEventListener('change',e=>{let v=Math.max(0,Math.min(1,Number(e.target.value)||0));document.getElementById('x'+(i+1)).value=v;e.target.value=v})});
+document.getElementById('run').addEventListener('click',animate);
+document.getElementById('reset').addEventListener('click',()=>{if(animTimer)clearInterval(animTimer);x1.value=.8;x2.value=.5;x3.value=.3;v1.value=.8;v2.value=.5;v3.value=.3;hidden.value='4';build();document.getElementById('status').textContent='初期値に戻しました。'});
+document.getElementById('hidden').addEventListener('change',build);
+build();
+</script>
+</body>
+</html>
